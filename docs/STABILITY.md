@@ -59,3 +59,38 @@ rolling back; do not copy this instance's config to other servers.
 Real-client HUD/rendering, permission denial, command interception, reconnect and
 damage/sound/weapon acceptance under active load remain necessary before declaring
 a fleet-wide stable release. Empty-server success does not certify those paths.
+
+## Client pilot acceptance, 2026-11-10
+
+The owner and other connected players subsequently tested public server #34:
+
+- Radar, chat and weapon HUD hiding persisted through respawn and restored after
+  disabling each setting via reload, without reconnecting.
+- Mode 1 name blocking transferred the player to spectators, displayed the
+  countdown, blocked team joining, extended the deadline after another name
+  change, and unblocked normally. Reconnecting discarded the old connection's
+  countdown and restrictions.
+- Delayed corpse hiding worked at three seconds; respawn remained visible and
+  fast respawn was unaffected by the previous body's timer.
+- Knife/Zeus damage was suppressed while pistol/AWP damage remained normal;
+  disabling the settings restored knife/Zeus damage without reconnecting.
+- Personal headshot muting was confirmed on the victim when killed in the head.
+  Attacker-side behavior and preference persistence were not separately accepted.
+
+A temporary console-only harness issued harmless commands through the native
+server API in a nonexempt human player's context, wrapping the production command
+listener to inspect its actual return values. Prefix, substring and case tests
+returned Handled; a control command returned Continue. Calling the production
+diagnostic permission guard denied that player and allowed root. All six checks
+passed. The harness and test rules were removed. Its temporary inotify instance
+limit increase was restored from 256 to 128; no persistent sysctl file changed.
+
+Known limitation: VIP RainbowModel writes alpha 255 during recoloring, overriding
+HideLegs' alpha 254. The owner chose to retain this compatibility limitation; no
+RainbowModel patch was deployed. Initial hiding after respawn was observed, but
+sustained hiding with RainbowModel is not accepted.
+
+AimPunch could not be assessed independently of VIP behavior on this AWP server.
+It remains unverified, as do sustained active-load performance and untested sound/
+weapon modes. These client observations do not establish a fleet-wide performance
+or all-modes guarantee. Test settings are restored after the pilot.

@@ -55,10 +55,10 @@ public sealed class ClientPrefs
 }
 
 
-public class MainPlugin : BasePlugin
+public partial class MainPlugin : BasePlugin
 {
     public override string ModuleName => "Game Manager (Block/Hide Unnecessaries In Game)";
-    public override string ModuleVersion => "2.1.6-perf.1";
+    public override string ModuleVersion => "2.1.6-perf.2";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
     public static MainPlugin Instance { get; set; } = new();
@@ -67,21 +67,7 @@ public class MainPlugin : BasePlugin
     public Globals g_Main = new();
     internal readonly CallbackLifetime Lifetime = new();
     internal CancellationTokenSource DownloadCancellation = new();
-    internal void QueueFrame(Action callback)
-    {
-        var generation = Lifetime.Capture();
-        Server.NextFrame(() => { if (Lifetime.IsCurrent(generation)) callback(); });
-    }
     public IPrefsStore<ClientPrefs>? _prefs;
-    internal void QueuePlayerFrame(CCSPlayerController player, Action callback)
-    {
-        var generation=Lifetime.Capture(); var userId=player.UserId; var steamId=player.SteamID;
-        Server.NextFrame(() =>
-        {
-            if (Lifetime.IsCurrent(generation) && player.IsValid(true) && player.UserId==userId && player.SteamID==steamId) callback();
-        });
-    }
-
     public override void Load(bool hotReload)
     {
         Instance = this;
@@ -207,23 +193,6 @@ public class MainPlugin : BasePlugin
                 
         return HookResult.Continue;
     }
-
-    private Func<string, int, string>? countdownFormatter;
-    public void OnTick()
-    {
-        if (g_Main.ActiveNameBlocks.Count == 0) return;
-        var now = DateTime.Now;
-        var key = Configs.Instance.BlockNameChanger == 1 ? "PrintToCenterToPlayer.NameChanging.Mode1.Blocked" : "PrintToCenterToPlayer.NameChanging.Mode2.Blocked";
-        var culture = System.Globalization.CultureInfo.CurrentUICulture.Name;
-        foreach (var data in g_Main.ActiveNameBlocks)
-        {
-            var player = data.Player;
-            if (!player.IsValid() || !g_Main.Player_Data.TryGetValue(player.Slot, out var current) || !ReferenceEquals(current, data)) continue;
-            var remaining = Configs.Instance.BlockNameChanger_Block - (now - data.LastNameChangeTime).TotalSeconds;
-            player.PrintToCenterHtml(data.Countdown.Get(remaining, key, culture, countdownFormatter ??= FormatCountdown));
-        }
-    }
-    private string FormatCountdown(string key, int seconds) => string.Format(Localizer[key, seconds], Array.Empty<object>());
 
     public HookResult OnEventPlayerPing(EventPlayerPing @event, GameEventInfo info)
     {
@@ -667,15 +636,19 @@ public class MainPlugin : BasePlugin
                     attacker_handlee.Victim = victim;
                 }
 
-                MainPlugin.Instance.AddTimer(0.01f, () =>
+                g_Main.Player_Data.TryGetValue(victim.Slot, out var victimContext);
+                g_Main.Player_Data.TryGetValue(attacker.Slot, out var attackerContext);
+                var victimSlot = victim.Slot;
+                var attackerSlot = attacker.Slot;
+                MainPlugin.Instance.AddLifetimeTimer(0.01f, () =>
                 {
-                    if (victim.IsValid(true) && g_Main.Player_Data.TryGetValue(victim.Slot, out var victim_handle2))
+                    if (g_Main.Player_Data.TryGetValue(victimSlot, out var victim_handle2) && ReferenceEquals(victim_handle2, victimContext))
                     {
                         victim_handle2.Attacker = null!;
                         victim_handle2.Victim = null!;
                     }
 
-                    if (attacker.IsValid(true) && g_Main.Player_Data.TryGetValue(attacker.Slot, out var attacker_handle2))
+                    if (g_Main.Player_Data.TryGetValue(attackerSlot, out var attacker_handle2) && ReferenceEquals(attacker_handle2, attackerContext))
                     {
                         attacker_handle2.Attacker = null!;
                         attacker_handle2.Victim = null!;
@@ -698,7 +671,7 @@ public class MainPlugin : BasePlugin
                     {
                         attacker_handle.StabedHisTeamMate = true;
 
-                        MainPlugin.Instance.AddTimer(1.00f, () =>
+                        MainPlugin.Instance.AddPlayerTimer(1.00f, attacker, () =>
                         {
                             if (attacker.IsValid(true) && g_Main.Player_Data.TryGetValue(attacker.Slot, out var attacker_handle2))
                             {
@@ -896,15 +869,6 @@ public class MainPlugin : BasePlugin
         return HookResult.Continue;
     }
 
-    public void OnClientDisconnect(int slot)
-    {
-        if (g_Main.Player_Data.Remove(slot, out var data))
-        {
-            data.PlayerName_Block = false;
-            data.Timer_DeadBody?.Kill();
-        }
-        g_Main.ActiveReloadId.Remove(slot);
-    }
     public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
     {
         if (@event == null) return HookResult.Continue;
@@ -917,14 +881,7 @@ public class MainPlugin : BasePlugin
         var player = @event.Userid;
         if (!player.IsValid()) return HookResult.Continue;
             
-        if (g_Main.Player_Data.TryGetValue(player.Slot, out var handle))
-        {
-            handle.PlayerName_Count = 0;
-            handle.PlayerName_Block = false;
-            handle.PlayerName_Block_Message = false;
-
-            g_Main.Player_Data.Remove(player.Slot);
-        }
+        OnClientDisconnect(player.Slot);
 
         return HookResult.Continue;
     }

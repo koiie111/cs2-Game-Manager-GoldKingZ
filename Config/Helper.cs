@@ -19,7 +19,7 @@ using System.Globalization;
 
 namespace Game_Manager_GoldKingZ;
 
-public class Helper
+public partial class Helper
 {
     private static readonly Dictionary<string, string[]> PermissionSegments = new();
     private static readonly Dictionary<JObject, WeaponJsonSettings> WeaponSettings = new();
@@ -29,7 +29,6 @@ public class Helper
         if (!RuleIndexes.TryGetValue(root, out var index)) RuleIndexes[root] = index = new(root);
         return index;
     }
-    private static readonly List<Globals.PlayerDataClass> NameSnapshot = new();
 
     public static StringComparison GetComparison(bool ignoreCase) => ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
     public static string[] RadioArray = new string[] {
@@ -313,6 +312,7 @@ public class Helper
         var g_Main = MainPlugin.Instance.g_Main;
 
         MainPlugin.Instance.Lifetime.Invalidate();
+        MainPlugin.Instance.CancelPlayerTimers();
         MainPlugin.Instance.DownloadCancellation.Cancel();
         MainPlugin.Instance.DownloadCancellation.Dispose();
         MainPlugin.Instance.DownloadCancellation = new();
@@ -1057,10 +1057,7 @@ public class Helper
         if (g_Main.Player_Data.TryGetValue(player.Slot, out var previous) &&
             (previous.SteamId != player.SteamID || previous.Player.Handle != player.Handle))
         {
-            previous.PlayerName_Block = false;
-            previous.Timer_DeadBody?.Kill();
-            g_Main.Player_Data.Remove(player.Slot);
-            g_Main.ActiveReloadId.Remove(player.Slot);
+            MainPlugin.Instance.OnClientDisconnect(player.Slot);
         }
         if (!g_Main.Player_Data.ContainsKey(player.Slot))
         {
@@ -1102,7 +1099,7 @@ public class Helper
         {
             if (g_Main.Player_Data.TryGetValue(player.Slot, out var handle))
             {
-                handle.Timer_DeadBody?.Kill();
+                MainPlugin.Instance.CancelPlayerTimer(handle.Timer_DeadBody);
                 handle.Timer_DeadBody = null!;
                 handle.PlayerAlpha = 255;
             }
@@ -1142,7 +1139,7 @@ public class Helper
         {
             if (g_Main.Player_Data.TryGetValue(player.Slot, out var handle))
             {
-                handle.Timer_DeadBody = MainPlugin.Instance.AddTimer(Configs.Instance.HideDeadBody_Delay, () =>
+                handle.Timer_DeadBody = MainPlugin.Instance.AddPlayerTimer(Configs.Instance.HideDeadBody_Delay, player, () =>
                 {
                     if (!player.IsValid(true) || player.IsAlive() && !player.ControllingBot) return;
                     player.PlayerRender(0);
@@ -1154,7 +1151,7 @@ public class Helper
             if (g_Main.Player_Data.TryGetValue(player.Slot, out var handle))
             {
                 handle.PlayerAlpha = 255;
-                handle.Timer_DeadBody = MainPlugin.Instance.AddTimer(0.01f, () =>
+                handle.Timer_DeadBody = MainPlugin.Instance.AddPlayerTimer(0.01f, player, () =>
                 {
                     StartDecay(player);
                 }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
@@ -1172,7 +1169,7 @@ public class Helper
         {
             if (handle.PlayerAlpha <= 0)
             {
-                handle.Timer_DeadBody?.Kill();
+                MainPlugin.Instance.CancelPlayerTimer(handle.Timer_DeadBody);
                 handle.Timer_DeadBody = null!;
                 handle.PlayerAlpha = 255;
                 return;
@@ -1198,7 +1195,7 @@ public class Helper
         {
             if(onetime) AdvancedPlayerPrintToChat(player, null!, MainPlugin.Instance.Localizer["PrintToChatToPlayer.HideChat.Warning"], Configs.Instance.HideChatHUD_Delay);
 
-            MainPlugin.Instance.AddTimer(Configs.Instance.HideChatHUD_Delay, () =>
+            MainPlugin.Instance.AddPlayerTimer(Configs.Instance.HideChatHUD_Delay, player, () =>
             {
                 if (!player.IsValid(true)) return;
                 player.PlayerHideHUD(Globals_Static.HIDECHAT, true);
@@ -1242,81 +1239,6 @@ public class Helper
         }
     }
     
-    public static void Timer_Checker_Callback()
-    {
-        NameSnapshot.Clear();
-        NameSnapshot.AddRange(MainPlugin.Instance.g_Main.Player_Data.Values);
-        foreach (var getplayers in NameSnapshot)
-        {
-            if (getplayers == null) continue;
-
-            var player = getplayers.Player;
-            if (!player.IsValid() || player.IsBot) continue;
-
-            var currentPlayerName = player.PlayerName;
-            var storedPlayerName = getplayers.PlayerName;
-
-            if (!getplayers.PlayerName_Block && currentPlayerName != storedPlayerName)
-            {
-                getplayers.PlayerName_Count++;
-                getplayers.LastNameChangeTime = DateTime.Now;
-                getplayers.PlayerName = currentPlayerName;
-
-                if (getplayers.PlayerName_Count >= Configs.Instance.BlockNameChanger_Changes)
-                {
-                    PunishPlayer(player, getplayers);
-                }
-            }
-            else if (getplayers.PlayerName_Block)
-            {
-                if (currentPlayerName != storedPlayerName)
-                {
-                    getplayers.PlayerName = currentPlayerName;
-
-                    if (Configs.Instance.BlockNameChanger == 1)
-                    {
-                        getplayers.LastNameChangeTime = DateTime.Now;
-                    }
-                }
-
-                var timeSinceLastChange = (DateTime.Now - getplayers.LastNameChangeTime).TotalSeconds;
-
-                if (Configs.Instance.BlockNameChanger == 1 && timeSinceLastChange >= Configs.Instance.BlockNameChanger_Block)
-                {
-                    getplayers.PlayerName_Count = 0;
-                    getplayers.PlayerName_Block = false;
-                    getplayers.PlayerName_Block_Message = false;
-                    getplayers.PlayerName = currentPlayerName;
-                    AdvancedPlayerPrintToChat(player, null!, MainPlugin.Instance.Localizer["PrintToChatToPlayer.NameChanging.Mode1.UnBlocked"]);
-                }
-                else if (Configs.Instance.BlockNameChanger == 2 && timeSinceLastChange >= Configs.Instance.BlockNameChanger_Block)
-                {
-                    ExecuteBlockCommand(player);
-                    getplayers.PlayerName_Count = 0;
-                    getplayers.PlayerName_Block = false;
-                    getplayers.PlayerName_Block_Message = false;
-                    getplayers.PlayerName = currentPlayerName;
-                }
-            }
-        }
-    }
-
-    private static void PunishPlayer(CCSPlayerController player, Globals.PlayerDataClass playerData)
-    {
-        if (!player.IsValid() || playerData.PlayerName_Block) return;
-
-        playerData.PlayerName_Block = true;
-        playerData.LastNameChangeTime = DateTime.Now;
-
-        if (!playerData.PlayerName_Block_Message)
-        {
-            AdvancedPlayerPrintToChat(player, null!, MainPlugin.Instance.Localizer["PrintToChatToPlayer.NameChanging.Warning"], Configs.Instance.BlockNameChanger_Block);
-            playerData.PlayerName_Block_Message = true;
-        }
-
-        player.ChangeTeam(CsTeam.Spectator);
-    }
-
     private static void ExecuteBlockCommand(CCSPlayerController player)
     {
         if (!player.IsValid()) return;

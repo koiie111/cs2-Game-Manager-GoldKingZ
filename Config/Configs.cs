@@ -1125,7 +1125,7 @@ namespace Game_Manager_GoldKingZ.Config
         
         private static readonly JsonSerializerOptions SimpleValueJsonOptions = new JsonSerializerOptions{WriteIndented = false,Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping};
 
-        public static void Load(string moduleDirectory)
+        public static void Load(string moduleDirectory, Action? beforeApply = null)
         {
             string configDirectory = Path.Combine(moduleDirectory ?? ".", "config");
             if (!Directory.Exists(configDirectory))
@@ -1133,14 +1133,23 @@ namespace Game_Manager_GoldKingZ.Config
                 Directory.CreateDirectory(configDirectory);
             }
 
-            filePath = Path.Combine(configDirectory, "config.json");
+            var candidatePath = Path.Combine(configDirectory, "config.json");
             JsonCreator.StartCreate();
 
-            if (!File.Exists(filePath)) { Save(); return; }
+            if (!File.Exists(candidatePath))
+            {
+                beforeApply?.Invoke();
+                filePath = candidatePath;
+                Instance = new Config();
+                Save();
+                return;
+            }
+
+            Config candidate;
 
             try
             {
-                var json = File.ReadAllText(filePath);
+                var json = File.ReadAllText(candidatePath);
 
                 json = RemoveTrailingCommas(json);
                 
@@ -1157,18 +1166,22 @@ namespace Game_Manager_GoldKingZ.Config
                 }
 
                 string normalizedJson = root?.ToJsonString(new JsonSerializerOptions { WriteIndented = false }) ?? "{}";
-                Instance = JsonSerializer.Deserialize<Config>(normalizedJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Config();
+                candidate = JsonSerializer.Deserialize<Config>(normalizedJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Config();
+                EnsureNestedDefaults(candidate);
+                ValidateStringRecursive(candidate);
+                ValidateRangesRecursive(candidate);
+                ValidateForceStringRecursive(candidate);
+                if (!File.Exists(candidatePath + ".pre-upgrade")) File.Copy(candidatePath, candidatePath + ".pre-upgrade");
             }
             catch (Exception ex)
             {
                 throw new InvalidDataException("GameManager config is invalid; original file preserved.", ex);
             }
 
-            EnsureNestedDefaults(Instance);
-            ValidateStringRecursive(Instance);
-            ValidateRangesRecursive(Instance);
-            ValidateForceStringRecursive(Instance);
-            if (!File.Exists(filePath + ".pre-upgrade")) File.Copy(filePath, filePath + ".pre-upgrade");
+            // Detach registrations using the old config only after the replacement is valid.
+            beforeApply?.Invoke();
+            filePath = candidatePath;
+            Instance = candidate;
             Save();
         }
 

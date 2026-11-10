@@ -31,10 +31,17 @@ try
     Configs.Load(temp); Check(Configs.Instance.BlockPing==1);Check(Configs.Instance.BlockNameChanger==1);Check(Configs.Instance.HideBloodDecals);Check(Configs.Instance.HideHeadShotSpark);Check(Configs.Instance.Ignore_BombPlantedHUDMessagesAndSound);Check(File.Exists(configPath+".pre-upgrade"));
     foreach(var invalid in new[]{"null","[]","{bad json"})
     {
-        File.WriteAllText(configPath,invalid);bool failed=false;try { Configs.Load(temp); } catch(InvalidDataException) { failed=true; }Check(failed);Check(File.ReadAllText(configPath)==invalid);
+        var prior = Configs.Instance; bool detached = false;
+        File.WriteAllText(configPath,invalid);bool failed=false;try { Configs.Load(temp, () => detached = true); } catch(InvalidDataException) { failed=true; }Check(failed);Check(File.ReadAllText(configPath)==invalid);
+        Check(!detached && ReferenceEquals(Configs.Instance, prior));
     }
+    File.WriteAllText(configPath, "{\"BlockNameChanger\":2}");
+    var beforeReload = Configs.Instance; bool applied = false;
+    Configs.Load(temp, () => { Check(ReferenceEquals(Configs.Instance, beforeReload)); applied = true; });
+    Check(applied && Configs.Instance.BlockNameChanger == 2);
 }
 finally { Directory.Delete(temp,true); }
+RuntimeChecks.Run(Check);
 Console.WriteLine($"PASS {assertions} assertions. Pure managed behavior only; CSS integration pending.");
 
 if (args.Contains("--benchmark"))
@@ -61,3 +68,5 @@ if (args.Contains("--benchmark"))
         }
     }
 }
+
+if (args.Contains("--runtime-benchmark")) RuntimeChecks.Benchmark();

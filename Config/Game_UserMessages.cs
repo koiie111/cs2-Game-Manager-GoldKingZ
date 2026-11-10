@@ -784,13 +784,23 @@ public class Game_UserMessages
         {
             if (onetime)
             {
-                MainPlugin.Instance.QueueFrame(() =>
+                MainPlugin.Instance.QueuePlayerFrame(player, () =>
                 {
-                    Helper.RemoveRegisterCommandsAndHooks();
-                    Helper.RemoveOnEntityTakeDamagePre();
-                    Helper.ClearVariables();
-                    
-                    Configs.Load(MainPlugin.Instance.ModuleDirectory);
+                    try
+                    {
+                        Configs.Load(MainPlugin.Instance.ModuleDirectory, () =>
+                        {
+                            Helper.RemoveRegisterCommandsAndHooks();
+                            Helper.RemoveOnEntityTakeDamagePre();
+                            Helper.ClearVariables();
+                        });
+                    }
+                    catch (InvalidDataException)
+                    {
+                        Helper.DebugMessage("Config reload rejected; existing config and handlers retained.", 0);
+                        Helper.AdvancedPlayerPrintToChat(player, null!, MainPlugin.Instance.Localizer["PrintToChatToPlayer.ReloadPlugin.Invalid"]);
+                        return;
+                    }
                     Helper.LoadJson(true, player);
 
                     Helper.DownloadMissingFiles();
@@ -799,9 +809,8 @@ public class Game_UserMessages
                     Helper.ExectueCommands();
                     Helper.ReloadPlayersGlobals();
                     Helper.StartTimer();
+                    Helper.AdvancedPlayerPrintToChat(player, null!, MainPlugin.Instance.Localizer["PrintToChatToPlayer.ReloadPlugin.Successfully"]);
                 });
-
-                Helper.AdvancedPlayerPrintToChat(player, commandInfo, MainPlugin.Instance.Localizer["PrintToChatToPlayer.ReloadPlugin.Successfully"]);
             }
 
             Helper.MuteCommands(um, cfg.Reload_GameManager_Hide);

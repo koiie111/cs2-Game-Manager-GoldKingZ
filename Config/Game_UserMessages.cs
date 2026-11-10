@@ -787,6 +787,7 @@ public class Game_UserMessages
                 MainPlugin.Instance.QueueFrame(() =>
                 {
                     Helper.RemoveRegisterCommandsAndHooks();
+                    Helper.RemoveOnEntityTakeDamagePre();
                     Helper.ClearVariables();
                     
                     Configs.Load(MainPlugin.Instance.ModuleDirectory);
@@ -794,6 +795,7 @@ public class Game_UserMessages
 
                     Helper.DownloadMissingFiles();
                     Helper.RegisterCommandsAndHooks();
+                    Helper.RegisterHookOnEntityTakeDamagePre();
                     Helper.ExectueCommands();
                     Helper.ReloadPlayersGlobals();
                     Helper.StartTimer();

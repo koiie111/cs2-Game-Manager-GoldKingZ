@@ -1,4 +1,10 @@
-# Stability candidate 2.1.6-stable.1-rc
+# Accepted build 2.1.6-stable.1-rc
+
+**Status: accepted by the project owner on 2026-11-10. The requested verification
+stage is complete.** The owner confirmed the plugin works for the intended use
+after the server and client pilot, and chose to close this testing stage.
+The observations and remaining technical limitations below are retained as the
+test record; acceptance does not turn unperformed checks into measured results.
 
 This candidate preserves the perf.2 countdown cache, active-name-block index,
 per-tick delivery and two-second name-check cadence. No diagnostics polling,
@@ -56,9 +62,9 @@ rejection of each invalid document, valid reload, radar cvar restoration, repeat
 reloads and a full map reload. Preserve the private complete pre-pilot backup when
 rolling back; do not copy this instance's config to other servers.
 
-Real-client HUD/rendering, permission denial, command interception, reconnect and
-damage/sound/weapon acceptance under active load remain necessary before declaring
-a fleet-wide stable release. Empty-server success does not certify those paths.
+The subsequent client and command checks are recorded below. The owner accepted
+this scope as sufficient to complete the current verification stage. Sustained
+active-load performance was not measured; fleet rollout is a separate operation.
 
 ## Client pilot acceptance, 2026-11-10
 
@@ -92,5 +98,5 @@ sustained hiding with RainbowModel is not accepted.
 
 AimPunch could not be assessed independently of VIP behavior on this AWP server.
 It remains unverified, as do sustained active-load performance and untested sound/
-weapon modes. These client observations do not establish a fleet-wide performance
-or all-modes guarantee. Test settings are restored after the pilot.
+weapon modes. The owner accepted these boundaries when closing verification.
+Test settings were restored after the pilot.

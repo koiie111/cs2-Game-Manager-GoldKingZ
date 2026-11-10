@@ -17,7 +17,7 @@ public static class CustomHooks
 
     public static void Init(CustomGameData gameData)
     {
-        if (_isHooked) return;
+        if (_isHooked || !Configs.Instance.UseOnConVarChangedHook) return;
 
         try
         {
@@ -85,7 +85,7 @@ public static class CustomHooks
                 {
                     Helper.DebugMessage($"[OnConVarChanged_Hook] Slot {slot} attempted to change \"{cvarName}\" from \"{expectedValue}\" to \"{newValue}\", forcing back to \"{expectedValue}\"", Configs.Instance.EnableDebug.ToDebugConfig(1));
 
-                    Server.NextFrame(() =>
+                    MainPlugin.Instance.QueueFrame(() =>
                     {
                         Server.ExecuteCommand($"{cvarName} {expectedValue}");
                     });

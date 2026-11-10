@@ -73,6 +73,14 @@ public class MainPlugin : BasePlugin
         Server.NextFrame(() => { if (Lifetime.IsCurrent(generation)) callback(); });
     }
     public IPrefsStore<ClientPrefs>? _prefs;
+    internal void QueuePlayerFrame(CCSPlayerController player, Action callback)
+    {
+        var generation=Lifetime.Capture(); var userId=player.UserId; var steamId=player.SteamID;
+        Server.NextFrame(() =>
+        {
+            if (Lifetime.IsCurrent(generation) && player.IsValid(true) && player.UserId==userId && player.SteamID==steamId) callback();
+        });
+    }
 
     public override void Load(bool hotReload)
     {
@@ -215,7 +223,7 @@ public class MainPlugin : BasePlugin
             player.PrintToCenterHtml(data.Countdown.Get(remaining, key, culture, countdownFormatter ??= FormatCountdown));
         }
     }
-    private string FormatCountdown(string key, int seconds) => Localizer[key, seconds];
+    private string FormatCountdown(string key, int seconds) => string.Format(Localizer[key, seconds], Array.Empty<object>());
 
     public HookResult OnEventPlayerPing(EventPlayerPing @event, GameEventInfo info)
     {
@@ -334,7 +342,7 @@ public class MainPlugin : BasePlugin
 
         if (getplayer.IsBot && (Configs.Instance.Custom_ThrowNadeMessages == 1 || Configs.Instance.Custom_ThrowNadeMessages == 3 || Configs.Instance.Custom_ThrowNadeMessages == 4)) return HookResult.Continue;
 
-        MainPlugin.Instance.QueueFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(getplayer, () =>
         {
             var player = getplayer;
             if (!player.IsValid(true)) return;
@@ -436,7 +444,7 @@ public class MainPlugin : BasePlugin
             var player = @event.Userid;
             if (!player.IsValid(true)) return HookResult.Continue;
 
-            MainPlugin.Instance.QueueFrame(() =>
+            MainPlugin.Instance.QueuePlayerFrame(player, () =>
             {
                 if (!player.IsValid(true)) return;
 
@@ -502,7 +510,7 @@ public class MainPlugin : BasePlugin
 
         if (settings.UnlimitedClip)
         {
-            MainPlugin.Instance.QueueFrame(() =>
+            MainPlugin.Instance.QueuePlayerFrame(player, () =>
             {
                 if (!player.IsValid(true) || !weapon.IsValid) return;
 
@@ -519,7 +527,7 @@ public class MainPlugin : BasePlugin
             return HookResult.Continue;
         }
 
-        MainPlugin.Instance.QueueFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(player, () =>
         {
             if (!player.IsValid(true) || !weapon.IsValid) return;
 
@@ -552,7 +560,7 @@ public class MainPlugin : BasePlugin
         int slot = player.Slot;
         g_Main.ActiveReloadId.Remove(slot);
 
-        MainPlugin.Instance.QueueFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(player, () =>
         {
             if (!player.IsValid(true)) return;
 
@@ -719,7 +727,7 @@ public class MainPlugin : BasePlugin
             
             if (Configs.Instance.Disable_AimPunch.DisableAimPunch == 1 || (Configs.Instance.Disable_AimPunch.DisableAimPunch > 1 && MainPlugin.Instance._prefs != null && MainPlugin.Instance._prefs.TryGetValue(victim.Slot, out var handle) && handle.Toggle_AimPunch == 1))
             {
-                MainPlugin.Instance.QueueFrame(() =>
+                MainPlugin.Instance.QueuePlayerFrame(victim, () =>
                 {
                     if (!victim.IsValid(true)) return;
 
@@ -768,7 +776,7 @@ public class MainPlugin : BasePlugin
 
         if (Configs.Instance.HideChatHUD > 0 || Configs.Instance.HideDeadBody > 0 || Configs.Instance.HideWeaponsHUD)
         {
-            MainPlugin.Instance.QueueFrame(() =>
+            MainPlugin.Instance.QueuePlayerFrame(victim, () =>
             {
                 if (!victim.IsValid(true)) return;
 
@@ -888,6 +896,15 @@ public class MainPlugin : BasePlugin
         return HookResult.Continue;
     }
 
+    public void OnClientDisconnect(int slot)
+    {
+        if (g_Main.Player_Data.Remove(slot, out var data))
+        {
+            data.PlayerName_Block = false;
+            data.Timer_DeadBody?.Kill();
+        }
+        g_Main.ActiveReloadId.Remove(slot);
+    }
     public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
     {
         if (@event == null) return HookResult.Continue;

@@ -10,7 +10,7 @@ public static class LegacyConfig
             if (!obj.ContainsKey(newKey)) obj[newKey] = obj[oldKey]?.DeepClone();
             obj.Remove(oldKey);
         }
-        if (root["BlockPing"] is JsonValue v && v.TryGetValue<bool>(out var ping)) root["BlockPing"] = ping ? 1 : 0;
+        if (root["BlockPing"] is JsonValue v && v.TryGetValue<bool>(out var ping)) root["BlockPing"] = JsonNode.Parse(ping ? "1" : "0");
         if (root["HideBloodAndHsSpark"] is {} blood)
         {
             root["HideBloodDecals"] ??= blood.DeepClone(); root["HideHeadShotSpark"] ??= blood.DeepClone(); root.Remove("HideBloodAndHsSpark");

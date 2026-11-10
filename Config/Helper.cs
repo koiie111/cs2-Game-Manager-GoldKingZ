@@ -23,6 +23,12 @@ public class Helper
 {
     private static readonly Dictionary<string, string[]> PermissionSegments = new();
     private static readonly Dictionary<JObject, WeaponJsonSettings> WeaponSettings = new();
+    private static readonly Dictionary<JObject, RuleIndex> RuleIndexes = new();
+    private static RuleIndex IndexRules(JObject root)
+    {
+        if (!RuleIndexes.TryGetValue(root, out var index)) RuleIndexes[root] = index = new(root);
+        return index;
+    }
     private static readonly List<Globals.PlayerDataClass> NameSnapshot = new();
 
     public static StringComparison GetComparison(bool ignoreCase) => ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
@@ -314,6 +320,7 @@ public class Helper
         NameSnapshot.Clear();
         PermissionSegments.Clear();
         WeaponSettings.Clear();
+        RuleIndexes.Clear();
         g_Main.Clear();
     }
 
@@ -339,6 +346,7 @@ public class Helper
         Server.ExecuteCommand("sv_hibernate_when_empty false");
 
         MainPlugin.Instance.RegisterListener<Listeners.OnClientAuthorized>(MainPlugin.Instance.OnClientAuthorized);
+        MainPlugin.Instance.RegisterListener<Listeners.OnClientDisconnect>(MainPlugin.Instance.OnClientDisconnect);
         MainPlugin.Instance.RegisterListener<Listeners.OnMapStart>(MainPlugin.Instance.OnMapStart);
         MainPlugin.Instance.RegisterListener<Listeners.OnMapEnd>(MainPlugin.Instance.OnMapEnd);
 
@@ -505,6 +513,7 @@ public class Helper
     public static void RemoveRegisterCommandsAndHooks()
     {
         MainPlugin.Instance.RemoveListener<Listeners.OnClientAuthorized>(MainPlugin.Instance.OnClientAuthorized);
+        MainPlugin.Instance.RemoveListener<Listeners.OnClientDisconnect>(MainPlugin.Instance.OnClientDisconnect);
         MainPlugin.Instance.RemoveListener<Listeners.OnMapStart>(MainPlugin.Instance.OnMapStart);
         MainPlugin.Instance.RemoveListener<Listeners.OnTick>(MainPlugin.Instance.OnTick);
         MainPlugin.Instance.RemoveListener<Listeners.OnMapEnd>(MainPlugin.Instance.OnMapEnd);
@@ -849,14 +858,14 @@ public class Helper
         var jsonData = MainPlugin.Instance.g_Main.JsonData;
         if (!Configs.Instance.Custom_ChatMessages || jsonData == null || !player.IsValid(true)) return (null, null, null, null, null, null, null, null, null, null, null, null, null);
 
-        var allProperties = jsonData.Properties();
-        foreach (var property in allProperties)
+        var ruleIndex = IndexRules(jsonData);
+        foreach (var property in ruleIndex.Groups)
         {
             var permissionKey = property.Name;
             if (permissionKey.Equals("ANY", StringComparison.OrdinalIgnoreCase)) continue;
             if (!string.IsNullOrEmpty(permissionKey) && permissionKey.HasValidPermissionData() && IsPlayerInGroupPermission(player, permissionKey))
             {
-                var formatGroup = jsonData[permissionKey] as JObject;
+                var formatGroup = property.Value;
                 var format = !string.IsNullOrEmpty(messageType) ? formatGroup?[messageType]?.Value<string>() : null;
 
                 var ClanTag_ScoreBoard = formatGroup?["ClanTag_ScoreBoard"]?.Value<string>();
@@ -879,7 +888,7 @@ public class Helper
             }
         }
 
-        var anyGroup = allProperties.FirstOrDefault(p => p.Name.Equals("ANY", StringComparison.OrdinalIgnoreCase))?.Value as JObject;
+        var anyGroup = ruleIndex.Any;
         var anyFormat = !string.IsNullOrEmpty(messageType) ? anyGroup?[messageType]?.Value<string>() : null;
         var ClanTag_ScoreBoardd = anyGroup?["ClanTag_ScoreBoard"]?.Value<string>();
         var ClanTag_Chatt = anyGroup?["ClanTag_Chat"]?.Value<string>();
@@ -953,7 +962,7 @@ public class Helper
 
         var clanTag = GetValuesInJson(player, "");
 
-        MainPlugin.Instance.QueueFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(player, () =>
         {
             var player_clantag = clanTag;
             var player_change = player;
@@ -978,7 +987,7 @@ public class Helper
     public static void CheckPlayerName(CCSPlayerController? player)
     {
         if (Configs.Instance.Filter_Players_Names < 1 || !player.IsValid()) return;
-        MainPlugin.Instance.QueueFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(player, () =>
         {
             if (!player.IsValid()) return;
 
@@ -1426,6 +1435,7 @@ public class Helper
     {
         PermissionSegments.Clear();
         WeaponSettings.Clear();
+        RuleIndexes.Clear();
         LoadJsonFile("config/chat_processor.json",   v => MainPlugin.Instance.g_Main.JsonData = v,        playerload, player, info);
         LoadJsonFile("config/weapons_config.json",   v => MainPlugin.Instance.g_Main.JsonData_Weapon = v, playerload, player, info);
     }
@@ -1763,7 +1773,7 @@ public class Helper
             if (weapon.Clip1 == preClip)
             {
                 lastReserve = weapon.ReserveAmmo[0];
-                MainPlugin.Instance.QueueFrame(CheckFrame);
+                MainPlugin.Instance.QueuePlayerFrame(player, CheckFrame);
                 return;
             }
 
@@ -1805,7 +1815,7 @@ public class Helper
             Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
         }
 
-        MainPlugin.Instance.QueueFrame(CheckFrame);
+        MainPlugin.Instance.QueuePlayerFrame(player, CheckFrame);
     }
 
     public static void DisableNewReloadClipsGlobal(CEntityInstance entity)
@@ -1985,7 +1995,14 @@ public class Helper
 
             if (needDownload)
             {
-                await File.WriteAllBytesAsync(fullPath, remoteBytes, cancellation);
+                var temporary = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    await File.WriteAllBytesAsync(temporary, remoteBytes, cancellation);
+                    cancellation.ThrowIfCancellationRequested();
+                    File.Move(temporary, fullPath, true);
+                }
+                finally { if (File.Exists(temporary)) File.Delete(temporary); }
             }
         }
         catch (Exception) { throw; }

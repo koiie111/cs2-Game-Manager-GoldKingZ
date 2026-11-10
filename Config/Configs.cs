@@ -1148,6 +1148,7 @@ namespace Game_Manager_GoldKingZ.Config
                 json = string.Join("\n", lines);
 
                 JsonNode? root = JsonNode.Parse(json);
+                if (root is not JsonObject) throw new InvalidDataException("Configuration root must be an object.");
 
                 if (root is JsonObject rootObj)
                 {

@@ -41,6 +41,27 @@ try
     Check(applied && Configs.Instance.BlockNameChanger == 2);
 }
 finally { Directory.Delete(temp,true); }
+var ruleDir = Path.Combine(Path.GetTempPath(), "gm-rules-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(ruleDir);
+try
+{
+    var path = Path.Combine(ruleDir, "rules.json");
+    File.WriteAllText(path, "// comment\n{\"ANY\":{\"text\":\"kept\"}}");
+    var retained = RuleDocuments.Read(path); Check((string?)retained["ANY"]?["text"] == "kept");
+    File.WriteAllText(path, ""); Check(RuleDocuments.Read(path, true).Count == 0);
+    foreach (var invalid in new[] { "", "[]", "null", "{bad" })
+    {
+        File.WriteAllText(path, invalid); bool failed = false;
+        try { RuleDocuments.Read(path); } catch (Newtonsoft.Json.JsonException) { failed = true; }
+        Check(failed); Check(File.ReadAllText(path) == invalid); Check((string?)retained["ANY"]?["text"] == "kept");
+    }
+}
+finally { Directory.Delete(ruleDir, true); }
+Check(CommandRules.Matches("css_test arg", new[] { "css_" }, true, Array.Empty<string>(), true));
+Check(CommandRules.Matches("say forbidden", Array.Empty<string>(), true, new[] { "FORBIDDEN" }, true));
+Check(!CommandRules.Matches("say forbidden", Array.Empty<string>(), true, new[] { "FORBIDDEN" }, false));
+Check(!CommandRules.Matches("CSS_test", new[] { "css_" }, false, Array.Empty<string>(), true));
+Check(!CommandRules.Matches("anything", Array.Empty<string>(), true, Array.Empty<string>(), true));
 RuntimeChecks.Run(Check);
 Console.WriteLine($"PASS {assertions} assertions. Pure managed behavior only; CSS integration pending.");
 

@@ -788,12 +788,8 @@ public class Game_UserMessages
                 {
                     try
                     {
-                        Configs.Load(MainPlugin.Instance.ModuleDirectory, () =>
-                        {
-                            Helper.RemoveRegisterCommandsAndHooks();
-                            Helper.RemoveOnEntityTakeDamagePre();
-                            Helper.ClearVariables();
-                        });
+                        MainPlugin.Instance.ReloadConfiguration();
+
                     }
                     catch (InvalidDataException)
                     {
@@ -801,14 +797,6 @@ public class Game_UserMessages
                         Helper.AdvancedPlayerPrintToChat(player, null!, MainPlugin.Instance.Localizer["PrintToChatToPlayer.ReloadPlugin.Invalid"]);
                         return;
                     }
-                    Helper.LoadJson(true, player);
-
-                    Helper.DownloadMissingFiles();
-                    Helper.RegisterCommandsAndHooks();
-                    Helper.RegisterHookOnEntityTakeDamagePre();
-                    Helper.ExectueCommands();
-                    Helper.ReloadPlayersGlobals();
-                    Helper.StartTimer();
                     Helper.AdvancedPlayerPrintToChat(player, null!, MainPlugin.Instance.Localizer["PrintToChatToPlayer.ReloadPlugin.Successfully"]);
                 });
             }

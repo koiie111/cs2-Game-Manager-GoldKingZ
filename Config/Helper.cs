@@ -21,6 +21,10 @@ namespace Game_Manager_GoldKingZ;
 
 public class Helper
 {
+    private static readonly Dictionary<string, string[]> PermissionSegments = new();
+    private static readonly Dictionary<JObject, WeaponJsonSettings> WeaponSettings = new();
+    private static readonly List<Globals.PlayerDataClass> NameSnapshot = new();
+
     public static StringComparison GetComparison(bool ignoreCase) => ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
     public static string[] RadioArray = new string[] {
     "coverme",
@@ -302,6 +306,14 @@ public class Helper
     {
         var g_Main = MainPlugin.Instance.g_Main;
 
+        MainPlugin.Instance.Lifetime.Invalidate();
+        MainPlugin.Instance.DownloadCancellation.Cancel();
+        MainPlugin.Instance.DownloadCancellation.Dispose();
+        MainPlugin.Instance.DownloadCancellation = new();
+        g_Main.Downloading_FromGithub = false;
+        NameSnapshot.Clear();
+        PermissionSegments.Clear();
+        WeaponSettings.Clear();
         g_Main.Clear();
     }
 
@@ -566,9 +578,15 @@ public class Helper
         if (string.IsNullOrEmpty(groups) || player == null || !player.IsValid)
             return false;
 
-        return groups.Split('|')
-            .Select(segment => segment.Trim())
-            .Any(trimmedSegment => Permission_CheckPermissionSegment(player, trimmedSegment));
+        if (!PermissionSegments.TryGetValue(groups, out var segments))
+        {
+            // Config strings only; keep the cache bounded even for external callers.
+            if (PermissionSegments.Count >= 1024) PermissionSegments.Clear();
+            PermissionSegments[groups] = segments = groups.Split('|').Select(s => s.Trim()).ToArray();
+        }
+        foreach (var segment in segments)
+            if (Permission_CheckPermissionSegment(player, segment)) return true;
+        return false;
     }
 
     private static bool Permission_CheckPermissionSegment(CCSPlayerController player, string segment)
@@ -832,13 +850,10 @@ public class Helper
         if (!Configs.Instance.Custom_ChatMessages || jsonData == null || !player.IsValid(true)) return (null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         var allProperties = jsonData.Properties();
-        var permissionKeys = allProperties
-            .Where(p => !p.Name.Equals("ANY", StringComparison.OrdinalIgnoreCase))
-            .Select(p => p.Name)
-            .ToList();
-
-        foreach (var permissionKey in permissionKeys)
+        foreach (var property in allProperties)
         {
+            var permissionKey = property.Name;
+            if (permissionKey.Equals("ANY", StringComparison.OrdinalIgnoreCase)) continue;
             if (!string.IsNullOrEmpty(permissionKey) && permissionKey.HasValidPermissionData() && IsPlayerInGroupPermission(player, permissionKey))
             {
                 var formatGroup = jsonData[permissionKey] as JObject;
@@ -938,7 +953,7 @@ public class Helper
 
         var clanTag = GetValuesInJson(player, "");
 
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueueFrame(() =>
         {
             var player_clantag = clanTag;
             var player_change = player;
@@ -963,7 +978,7 @@ public class Helper
     public static void CheckPlayerName(CCSPlayerController? player)
     {
         if (Configs.Instance.Filter_Players_Names < 1 || !player.IsValid()) return;
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueueFrame(() =>
         {
             if (!player.IsValid()) return;
 
@@ -1030,6 +1045,14 @@ public class Helper
         if (!player.IsValid(true)) return;
 
         var g_Main = MainPlugin.Instance.g_Main;
+        if (g_Main.Player_Data.TryGetValue(player.Slot, out var previous) &&
+            (previous.SteamId != player.SteamID || previous.Player.Handle != player.Handle))
+        {
+            previous.PlayerName_Block = false;
+            previous.Timer_DeadBody?.Kill();
+            g_Main.Player_Data.Remove(player.Slot);
+            g_Main.ActiveReloadId.Remove(player.Slot);
+        }
         if (!g_Main.Player_Data.ContainsKey(player.Slot))
         {
             var initialData = new Globals.PlayerDataClass(
@@ -1212,7 +1235,9 @@ public class Helper
     
     public static void Timer_Checker_Callback()
     {
-        foreach (var getplayers in MainPlugin.Instance.g_Main.Player_Data.Values.ToList())
+        NameSnapshot.Clear();
+        NameSnapshot.AddRange(MainPlugin.Instance.g_Main.Player_Data.Values);
+        foreach (var getplayers in NameSnapshot)
         {
             if (getplayers == null) continue;
 
@@ -1303,9 +1328,14 @@ public class Helper
         Server.ExecuteCommand(server_command);
     }
 
+    private static object? cleanupConfig;
+    private static HashSet<string> cleanupNames = new(StringComparer.OrdinalIgnoreCase);
+    private static HashSet<string> cleanupSearch = new(StringComparer.OrdinalIgnoreCase);
     public static void Timer_AutoClean_Callback()
     {
         var g_Main = MainPlugin.Instance.g_Main;
+        if (!ReferenceEquals(cleanupConfig, Configs.Instance))
+        {
         var selectedWeapons = Configs.Instance.AutoClean_TheseDroppedWeaponsOnly
             .Select(weapon => weapon.Trim().ToLower())
             .ToList();
@@ -1338,6 +1368,12 @@ public class Helper
         if (searchNames.Contains("weapon_usp_silencer"))
             searchNames.Add("weapon_hkp2000");
 
+        cleanupNames = allWeaponsToClean;
+        cleanupSearch = searchNames;
+        cleanupConfig = Configs.Instance;
+        }
+        var allWeaponsToCleanCached = cleanupNames;
+        var searchNamesCached = cleanupSearch;
         for (int i = g_Main.CbaseWeapons.Count - 1; i >= 0; i--)
         {
             var weapon = g_Main.CbaseWeapons[i];
@@ -1351,7 +1387,7 @@ public class Helper
                 g_Main.CbaseWeapons.RemoveAt(i);
             }
         }
-        foreach (var weaponClass in searchNames)
+        foreach (var weaponClass in searchNamesCached)
         {
             foreach (var entity in Utilities.FindAllEntitiesByDesignerName<CBaseEntity>(weaponClass))
             {
@@ -1359,7 +1395,7 @@ public class Helper
 
                 var asWeapon = entity.As<CBasePlayerWeapon>();
                 string realName = CheckSilencerWeapons(asWeapon);
-                if (!allWeaponsToClean.Contains(realName)) continue;
+                if (!allWeaponsToCleanCached.Contains(realName)) continue;
 
                 if (entity.OwnerEntity == null || !entity.OwnerEntity.IsValid)
                 {
@@ -1388,6 +1424,8 @@ public class Helper
 
     public static void LoadJson(bool playerload = false, CCSPlayerController player = null!, CommandInfo info = null!)
     {
+        PermissionSegments.Clear();
+        WeaponSettings.Clear();
         LoadJsonFile("config/chat_processor.json",   v => MainPlugin.Instance.g_Main.JsonData = v,        playerload, player, info);
         LoadJsonFile("config/weapons_config.json",   v => MainPlugin.Instance.g_Main.JsonData_Weapon = v, playerload, player, info);
     }
@@ -1548,7 +1586,12 @@ public class Helper
         public bool UseOldReload { get; set; } = false;
     }
 
-    private static WeaponJsonSettings ParseWeaponObject(JObject obj) => new()
+    private static WeaponJsonSettings ParseWeaponObject(JObject obj)
+    {
+        if (WeaponSettings.TryGetValue(obj, out var cached)) return cached;
+        return WeaponSettings[obj] = ParseWeaponObjectCore(obj);
+    }
+    private static WeaponJsonSettings ParseWeaponObjectCore(JObject obj) => new()
     {
         Clip          = obj["Clip"]?.Value<int?>(),
         Ammo          = obj["Ammo"]?.Value<int?>(),
@@ -1611,7 +1654,7 @@ public class Helper
         if (entity == null || !entity.IsValid) return;
         if (entity.DesignerName == null || !entity.DesignerName.StartsWith("weapon_")) return;
 
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueueFrame(() =>
         {
             if (entity == null || !entity.IsValid) return;
             if (entity.DesignerName == null || !entity.DesignerName.StartsWith("weapon_")) return;
@@ -1720,7 +1763,7 @@ public class Helper
             if (weapon.Clip1 == preClip)
             {
                 lastReserve = weapon.ReserveAmmo[0];
-                Server.NextFrame(CheckFrame);
+                MainPlugin.Instance.QueueFrame(CheckFrame);
                 return;
             }
 
@@ -1762,7 +1805,7 @@ public class Helper
             Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
         }
 
-        Server.NextFrame(CheckFrame);
+        MainPlugin.Instance.QueueFrame(CheckFrame);
     }
 
     public static void DisableNewReloadClipsGlobal(CEntityInstance entity)
@@ -1770,7 +1813,7 @@ public class Helper
         if (entity == null || !entity.IsValid) return;
         if (entity.DesignerName == null || !entity.DesignerName.StartsWith("weapon_")) return;
 
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueueFrame(() =>
         {
             if (entity == null || !entity.IsValid) return;
             if (entity.DesignerName == null || !entity.DesignerName.StartsWith("weapon_")) return;
@@ -1858,60 +1901,37 @@ public class Helper
 
     public static void DownloadMissingFiles()
     {
-        if(MainPlugin.Instance.g_Main.Downloading_FromGithub)return;
-
-        MainPlugin.Instance.g_Main.Downloading_FromGithub = true;
-
+        var owner = MainPlugin.Instance;
+        if (!Configs.Instance.UseOnConVarChangedHook || owner.g_Main.Downloading_FromGithub) return;
+        owner.g_Main.Downloading_FromGithub = true;
+        var generation = owner.Lifetime.Capture();
+        var token = owner.DownloadCancellation.Token;
+        var path = Path.Combine(owner.ModuleDirectory, "gamedata/gamedata.json");
+        var update = Configs.Instance.AutoUpdateSignatures;
         _ = Task.Run(async () =>
         {
             try
             {
-                await DownloadMissingFilesAsync();
+                await DownloadFromGitHub(path, "https://raw.githubusercontent.com/oqyh/cs2-Private-Plugins/main/Resources/gamedata.json", update, token);
+                if (!token.IsCancellationRequested)
+                    Server.NextFrame(() =>
+                    {
+                        if (!owner.Lifetime.IsCurrent(generation)) return;
+                        owner.g_Main.Downloading_FromGithub = false;
+                        CustomGameData.Load();
+                    });
             }
-            finally
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
             {
-                MainPlugin.Instance.g_Main.Downloading_FromGithub = false;
-            }
-        });
-    }
-    public static async Task DownloadMissingFilesAsync()
-    {
-        try
-        {
-            string Fpath = Path.Combine(MainPlugin.Instance.ModuleDirectory, "GeoLocation");
-            if (Directory.Exists(Fpath))
-            {
-                try
+                Server.NextFrame(() =>
                 {
-                    Directory.Delete(Fpath, true);
-                }
-                catch
-                {
-
-                }
+                    if (!owner.Lifetime.IsCurrent(generation)) return;
+                    owner.g_Main.Downloading_FromGithub = false;
+                    DebugMessage($"Download failed: {ex.Message}", 0);
+                });
             }
-            
-            await Start_DownloadMissingFiles();
-            await Server.NextFrameAsync(CustomGameData.Load);
-        }
-        catch (Exception ex)
-        {
-            DebugMessage($"DownloadMissingFilesAsync failed: {ex.Message}");
-        }
-    }
-    public static async Task Start_DownloadMissingFiles()
-    {
-        try
-        {
-            string localPath_gamedata = Path.Combine(MainPlugin.Instance.ModuleDirectory, "gamedata/gamedata.json");
-            string githubUrl_gamedata = "https://raw.githubusercontent.com/oqyh/cs2-Private-Plugins/main/Resources/gamedata.json";
-            await DownloadFromGitHub(localPath_gamedata, githubUrl_gamedata, Configs.Instance.AutoUpdateSignatures);
-            
-        }
-        catch (Exception ex)
-        {
-            DebugMessage($"DownloadMissingFiles Error: {ex.Message}");
-        }
+        }, token);
     }
 
     private static readonly HttpClient _httpClient_Github = new HttpClient
@@ -1919,11 +1939,11 @@ public class Helper
         Timeout = TimeSpan.FromSeconds(50)
     };
     private static readonly TimeSpan _timeout_Github = TimeSpan.FromSeconds(50);
-    public static async Task DownloadFromGitHub(string filePath, string githubUrl, bool AutoUpdate = false)
+    public static async Task DownloadFromGitHub(string filePath, string githubUrl, bool AutoUpdate = false, CancellationToken cancellation = default)
     {
         try
         {
-            string fullPath = Path.Combine(MainPlugin.Instance.ModuleDirectory, filePath);
+            string fullPath = Path.GetFullPath(filePath);
 
             string? dir = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(dir))
@@ -1931,21 +1951,24 @@ public class Helper
                 Directory.CreateDirectory(dir);
             }
 
-            _httpClient_Github.DefaultRequestHeaders.Remove("User-Agent");
-            _httpClient_Github.DefaultRequestHeaders.Add("User-Agent", "CS2-Game-Manager");
+
 
             string actualDownloadUrl = githubUrl;
 
             if (githubUrl.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
             {
-                using var ctsTxt = new CancellationTokenSource(_timeout_Github);
+                using var ctsTxt = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+                ctsTxt.CancelAfter(_timeout_Github);
                 var txtResponse = await _httpClient_Github.GetAsync(githubUrl, ctsTxt.Token);
                 txtResponse.EnsureSuccessStatusCode();
                 actualDownloadUrl = (await txtResponse.Content.ReadAsStringAsync()).Trim();
             }
 
-            using var ctsBytes = new CancellationTokenSource(_timeout_Github);
-            var bytesResponse = await _httpClient_Github.GetAsync(actualDownloadUrl, ctsBytes.Token);
+            using var ctsBytes = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+            ctsBytes.CancelAfter(_timeout_Github);
+            using var request = new HttpRequestMessage(HttpMethod.Get, actualDownloadUrl);
+            request.Headers.UserAgent.ParseAdd("CS2-Game-Manager");
+            using var bytesResponse = await _httpClient_Github.SendAsync(request, ctsBytes.Token);
             bytesResponse.EnsureSuccessStatusCode();
             byte[] remoteBytes = await bytesResponse.Content.ReadAsByteArrayAsync();
 
@@ -1962,12 +1985,9 @@ public class Helper
 
             if (needDownload)
             {
-                await File.WriteAllBytesAsync(fullPath, remoteBytes);
+                await File.WriteAllBytesAsync(fullPath, remoteBytes, cancellation);
             }
         }
-        catch (Exception ex)
-        {
-            DebugMessage($"DownloadFromGitHub Error: {ex.Message}");
-        }
+        catch (Exception) { throw; }
     }
 }

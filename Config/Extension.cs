@@ -193,6 +193,12 @@ public static class Extension
         if (entity == null || !entity.IsValid || entity.DesignerName != "player")return null;
 
         var entityIndex = entity.Index;
+        var pawn = entity.As<CCSPlayerPawn>();
+        var candidate = pawn.Controller.Value?.As<CCSPlayerController>();
+        if (candidate.IsValid(true) && (realPlayer ? candidate.Pawn.Value?.Index : candidate.PlayerPawn.Value?.Index) == entityIndex)
+            return candidate;
+        // Bot takeover can associate a different controller; preserve the original lookup.
+
 
         return Utilities.GetPlayers().FirstOrDefault(p =>p.IsValid(true) &&(realPlayer? p.Pawn.Value?.Index == entityIndex : p.PlayerPawn.Value?.Index == entityIndex));
     }

@@ -1147,39 +1147,27 @@ namespace Game_Manager_GoldKingZ.Config
                 var lines = json.Split('\n').Where(l => !l.TrimStart().StartsWith("//")).ToArray();
                 json = string.Join("\n", lines);
 
-                JsonNode? root = null;
-                try
-                {
-                    root = JsonNode.Parse(json);
-                }
-                catch
-                {
-                    Instance = new Config();
-                    EnsureNestedDefaults(Instance);
-                    ValidateStringRecursive(Instance);
-                    ValidateRangesRecursive(Instance);
-                    ValidateForceStringRecursive(Instance);
-                    Save();
-                    return;
-                }
+                JsonNode? root = JsonNode.Parse(json);
 
                 if (root is JsonObject rootObj)
                 {
+                    LegacyConfig.Upgrade(rootObj);
                     CleanJsonObjectStrict(rootObj, Instance.GetType());
                 }
 
                 string normalizedJson = root?.ToJsonString(new JsonSerializerOptions { WriteIndented = false }) ?? "{}";
                 Instance = JsonSerializer.Deserialize<Config>(normalizedJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Config();
             }
-            catch
+            catch (Exception ex)
             {
-                Instance = new Config();
+                throw new InvalidDataException("GameManager config is invalid; original file preserved.", ex);
             }
 
             EnsureNestedDefaults(Instance);
             ValidateStringRecursive(Instance);
             ValidateRangesRecursive(Instance);
             ValidateForceStringRecursive(Instance);
+            if (!File.Exists(filePath + ".pre-upgrade")) File.Copy(filePath, filePath + ".pre-upgrade");
             Save();
         }
 
@@ -1640,6 +1628,7 @@ namespace Game_Manager_GoldKingZ.Config
                 var keyLower = key.ToLowerInvariant();
                 if (!map.TryGetValue(keyLower, out var prop))
                 {
+                    Helper.DebugMessage($"Unsupported config key: {key}; retain the original backup when upgrading.", 0);
                     jsonObj.Remove(key);
                     continue;
                 }

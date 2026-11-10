@@ -42,12 +42,15 @@ public class Game_UserMessages
 
     public HookResult MuteGunShots_UserMessages(UserMessage um)
     {
-        var weapon_id = um.ReadUInt("weapon_id");
-        var sound_type = um.ReadInt("sound_type");
-        var item_def_index = um.ReadInt("item_def_index");
-        Helper.DebugMessage("[Sounds_MuteGunShots] weapon_id : " + weapon_id, Configs.Instance.EnableDebug.ToDebugConfig(3));
-        Helper.DebugMessage("[Sounds_MuteGunShots] sound_type : " + sound_type, Configs.Instance.EnableDebug.ToDebugConfig(3));
-        Helper.DebugMessage("[Sounds_MuteGunShots] item_def_index : " + item_def_index, Configs.Instance.EnableDebug.ToDebugConfig(3));
+        if (Configs.Instance.EnableDebug.ToDebugConfig(3) >= 0)
+        {
+            var weapon_id = um.ReadUInt("weapon_id");
+            var sound_type = um.ReadInt("sound_type");
+            var item_def_index = um.ReadInt("item_def_index");
+        if (Configs.Instance.EnableDebug.ToDebugConfig(3) >= 0) Helper.DebugMessage("[Sounds_MuteGunShots] weapon_id : " + weapon_id, Configs.Instance.EnableDebug.ToDebugConfig(3));
+        if (Configs.Instance.EnableDebug.ToDebugConfig(3) >= 0) Helper.DebugMessage("[Sounds_MuteGunShots] sound_type : " + sound_type, Configs.Instance.EnableDebug.ToDebugConfig(3));
+        if (Configs.Instance.EnableDebug.ToDebugConfig(3) >= 0) Helper.DebugMessage("[Sounds_MuteGunShots] item_def_index : " + item_def_index, Configs.Instance.EnableDebug.ToDebugConfig(3));
+        }
 
         if (Configs.Instance.Sounds_MuteGunShots == 1)
         {
@@ -87,11 +90,11 @@ public class Game_UserMessages
             || Configs.Instance.Ignore_ChickenKilledMessages && message.Contains("#Pet_Killed")
             || Configs.Instance.Ignore_Custom_TextMsg.Contains(message))
             {
-                Helper.DebugMessage("[Ignore_Custom] [TextMsg] - [MUTED] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(4) >= 0) Helper.DebugMessage("[Ignore_Custom] [TextMsg] - [MUTED] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
                 um.Recipients.Clear();
             } else
             {
-                Helper.DebugMessage("[Ignore_Custom] [TextMsg] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(4) >= 0) Helper.DebugMessage("[Ignore_Custom] [TextMsg] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
             }
             
         }
@@ -108,11 +111,11 @@ public class Game_UserMessages
             || Configs.Instance.Ignore_DefusingBombMessages && message.Contains("#Cstrike_TitlesTXT_Defusing_Bomb")
             || Configs.Instance.Ignore_Custom_RadioText.Contains(message))
             {
-                Helper.DebugMessage("[Ignore_Custom] [RadioText] - [MUTED] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(4) >= 0) Helper.DebugMessage("[Ignore_Custom] [RadioText] - [MUTED] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
                 um.Recipients.Clear();
             } else
             {
-                Helper.DebugMessage("[Ignore_Custom] [RadioText] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(4) >= 0) Helper.DebugMessage("[Ignore_Custom] [RadioText] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
             }
             
         }
@@ -125,11 +128,11 @@ public class Game_UserMessages
         if (Configs.Instance.Ignore_TeamMateAttackMessages && Helper.TeamWarningArray.Contains(message)
         || Configs.Instance.Ignore_Custom_HintText.Contains(message))
         {
-            Helper.DebugMessage("[Ignore_Custom] [HintText] - [MUTED] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
+            if (Configs.Instance.EnableDebug.ToDebugConfig(4) >= 0) Helper.DebugMessage("[Ignore_Custom] [HintText] - [MUTED] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
             um.Recipients.Clear();
         }else
         {
-            Helper.DebugMessage("[Ignore_Custom] [HintText] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
+            if (Configs.Instance.EnableDebug.ToDebugConfig(4) >= 0) Helper.DebugMessage("[Ignore_Custom] [HintText] " + message, Configs.Instance.EnableDebug.ToDebugConfig(4));
         }
 
         return HookResult.Continue;
@@ -320,16 +323,16 @@ public class Game_UserMessages
         {
             if(attacker.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - Attacker: {attacker.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - Attacker: {attacker.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else if(victim.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - Victim: {victim.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - Victim: {victim.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else if(PlayerMadeSounds.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - Player: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - Player: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] [MUTED] - GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }
             return HookResult.Stop;
         }
@@ -337,16 +340,16 @@ public class Game_UserMessages
         {
             if(attacker.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] Attacker: {attacker.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] Attacker: {attacker.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else if(victim.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] Victim: {victim.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] Victim: {victim.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else if(PlayerMadeSounds.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] Player: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] Player: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][UserMessages] GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }
         }
         
@@ -479,10 +482,10 @@ public class Game_UserMessages
         {
             if(PlayerMadeSounds.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] [MUTED] - Attacker: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] [MUTED] - Attacker: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] [MUTED] - GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] [MUTED] - GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }
             return HookResult.Stop;
         }
@@ -490,10 +493,10 @@ public class Game_UserMessages
         {
             if(PlayerMadeSounds.IsValid(true))
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] - Attacker: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] - Attacker: {PlayerMadeSounds.PlayerName} : {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }else
             {
-                Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] - GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
+                if (Configs.Instance.EnableDebug.ToDebugConfig(2) >= 0) Helper.DebugMessage($"[Custom_MuteSounds][WeaponSound] - GLOBAL: {soundevent}", Configs.Instance.EnableDebug.ToDebugConfig(2));
             }
         }
         
@@ -781,7 +784,7 @@ public class Game_UserMessages
         {
             if (onetime)
             {
-                Server.NextFrame(() =>
+                MainPlugin.Instance.QueueFrame(() =>
                 {
                     Helper.RemoveRegisterCommandsAndHooks();
                     Helper.ClearVariables();

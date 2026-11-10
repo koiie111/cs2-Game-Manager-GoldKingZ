@@ -1,0 +1,17 @@
+using System.Diagnostics;
+using System.Text.Json;
+namespace Game_Manager_GoldKingZ;
+public static class PerfProbe
+{
+    private static long[] times = new long[8192], bytes = new long[8192];
+    private static int count; private static bool active;
+    public static void Start() { count = 0; active = true; }
+    public static string Finish() { active = false; return JsonSerializer.Serialize(new { count, frequency=Stopwatch.Frequency, ticks=times.Take(count).ToArray(), allocations=bytes.Take(count).ToArray() }); }
+    public static Sample Begin() => new(active && count < times.Length);
+    public readonly struct Sample : IDisposable
+    {
+        private readonly bool enabled; private readonly long start, allocated;
+        public Sample(bool enabled) { this.enabled=enabled; allocated=enabled?GC.GetAllocatedBytesForCurrentThread():0; start=enabled?Stopwatch.GetTimestamp():0; }
+        public void Dispose() { if (!enabled) return; var elapsed=Stopwatch.GetTimestamp()-start; var alloc=GC.GetAllocatedBytesForCurrentThread()-allocated; times[count]=elapsed;bytes[count]=alloc;count++; }
+    }
+}

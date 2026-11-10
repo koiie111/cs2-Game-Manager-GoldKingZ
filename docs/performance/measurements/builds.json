@@ -1,0 +1,45 @@
+{
+  "baseline_source": "f7ff9e909649cd6fe597457b994201d30a0a766b",
+  "release_source": "c84aca6565ad40037777cdef5aff38b4da9f5d77",
+  "builds": {
+    "baseline": {
+      "dll_sha256": "3a1801bd3eb8defc61b775170dff4a78903c65c83232d32fadb979baf40bbe02",
+      "sources": {
+        "Game-Manager-GoldKingZ.cs": "d2a9299ec01fb3b26057c217524ac238109fc35144fb6df87d49af849755c38a",
+        "Config\\Configs.cs": "fd4997ca3e9418a6aa64ce28b57159fb78f2a6d9c1fc712178b1c0f6627280f5",
+        "Config\\ConsoleColorFix.cs": "5143ee48f9c19522665db1186c5e62c4829d60b56b43009ee43fb3ad8844c78b",
+        "Config\\Custom_GameData.cs": "0de482e6cc7cbda58025f94693d5766f9049e17fd51a6e837c455a7058f77869",
+        "Config\\Custom_Hooks.cs": "34b2245b6855bd3d43e507de81cb8b2a3be41f47725fcb64e9570d5428897208",
+        "Config\\Extension.cs": "3be3d5dfa97860feaf5b62a788fcca8e31bc44562158824a058291587d4a9b25",
+        "Config\\Game_Listeners.cs": "7f4d6aa39f2e5a6f5b72b3b0955ba7416106a7e0fc619cf3a6913bebd1b14108",
+        "Config\\Game_UserMessages.cs": "de722cbc17926f09e535510d2d1f6225f18727b4929c0d50f93e2652cf25b8dd",
+        "Config\\Globals.cs": "74b9d1fc5a686140c4797d1ebe0f0ba8f2801f430b79482436072cdc3f16a48c",
+        "Config\\Helper.cs": "a1d8fe058f5898386adc1936c4f75f9d517341ac86f0c587a21ce14f68eb985e",
+        "Config\\JsonCreator.cs": "7a30b2d00152f04c61e897f70f3bc69b8ff9be32e6a9cc99b4b3373d60c1ff2d",
+        "Config\\PerfProbe.cs": "dee602468057abd2cad73a69490ee144935a7efb6d696b2bacc5403b148a1430"
+      }
+    },
+    "candidate": {
+      "dll_sha256": "009a849ba46c448312876a9ce3e50366b2eaa05749e48f35711906cf387c755a",
+      "sources": {
+        "Game-Manager-GoldKingZ.cs": "d0efef39bfabb4d69ba528bc8abab52775ac02725c4859e374d19db32d1986ef",
+        "Config\\CallbackLifetime.cs": "085dadc3f66395bfca3b1afa146235e918cda67449d1205c3fa0f061df7f8f3a",
+        "Config\\Configs.cs": "183af38ef9269cc75a2cfe1353da66f716d68e53560945d11a0c26de8d3bf0f9",
+        "Config\\ConsoleColorFix.cs": "5143ee48f9c19522665db1186c5e62c4829d60b56b43009ee43fb3ad8844c78b",
+        "Config\\CountdownText.cs": "34e692209214b0309ddde84c6f7d50205b530edd057869e4bb74b237bdf983c4",
+        "Config\\Custom_GameData.cs": "0de482e6cc7cbda58025f94693d5766f9049e17fd51a6e837c455a7058f77869",
+        "Config\\Custom_Hooks.cs": "0807e1c3cafc9764eb055d8ba3e0d01b62eb7c217c5a19da33227fc08e4df812",
+        "Config\\Extension.cs": "d849e1f062378dcaac809fe5267b2a03998b66f8e6bf62a7338e5930fe02b774",
+        "Config\\Game_Listeners.cs": "7f4d6aa39f2e5a6f5b72b3b0955ba7416106a7e0fc619cf3a6913bebd1b14108",
+        "Config\\Game_UserMessages.cs": "c2e7209a425b7f01dd1b596f08a8329ea5f42a06b1495e7ac97b5b7dad1f2c91",
+        "Config\\Globals.cs": "9d252e497b771eca1d02d2afb42c1fdf3c098d7c0658f56f1b1057019df9865f",
+        "Config\\Helper.cs": "32dd0eee10371f51e97d206b7639bf811812c5566f79c7b71582108109c20937",
+        "Config\\JsonCreator.cs": "7a30b2d00152f04c61e897f70f3bc69b8ff9be32e6a9cc99b4b3373d60c1ff2d",
+        "Config\\LegacyConfig.cs": "5045478e8871eaba1f9fde281f60361a07c5bb63663e228fd8457989b7c216ac",
+        "Config\\PerfProbe.cs": "dee602468057abd2cad73a69490ee144935a7efb6d696b2bacc5403b148a1430",
+        "Config\\RuleIndex.cs": "72814edf9f4e5e9809d974da394ba6fb274c3347932dab64201bdc5e82b94711"
+      }
+    }
+  },
+  "probe_tick_matches_release": true
+}

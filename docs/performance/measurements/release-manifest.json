@@ -1,0 +1,13 @@
+{
+  "module_version": "2.1.6-perf.1",
+  "source_commit": "c84aca6565ad40037777cdef5aff38b4da9f5d77",
+  "sdk": "10.0.400",
+  "css_api": "1.0.378",
+  "clientprefs_required": "1.0.3",
+  "files": {
+    "Game-Manager-GoldKingZ.deps.json": "99e1787510a957428e6d9227d2054609c3b1292f40758728b21cfc14ee00cc4a",
+    "Game-Manager-GoldKingZ.dll": "0b62ed8ffc62eb53a4dc02148cfdb4e968be3bccd94e0b14d48475c1410630a2",
+    "Newtonsoft.Json.dll": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07",
+    "lang\\en.json": "a51be16c2f461289820336a629f99ef4bdf7d3bf54b908b5b3090470e345b560"
+  }
+}

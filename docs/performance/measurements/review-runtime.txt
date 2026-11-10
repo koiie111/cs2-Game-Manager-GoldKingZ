@@ -1,0 +1,25 @@
+PASS 256 assertions. Pure managed behavior only; CSS integration pending.
+{"synthetic":true,"recipients":0,"connected":32,"optimized":false,"window":0,"frames":20000,"delivered":0,"milliseconds":2.5036,"allocatedBytes":0}
+{"synthetic":true,"recipients":0,"connected":32,"optimized":false,"window":1,"frames":20000,"delivered":0,"milliseconds":2.4783,"allocatedBytes":0}
+{"synthetic":true,"recipients":0,"connected":32,"optimized":false,"window":2,"frames":20000,"delivered":0,"milliseconds":2.356,"allocatedBytes":0}
+{"synthetic":true,"recipients":0,"connected":32,"optimized":true,"window":0,"frames":20000,"delivered":0,"milliseconds":0.0586,"allocatedBytes":0}
+{"synthetic":true,"recipients":0,"connected":32,"optimized":true,"window":1,"frames":20000,"delivered":0,"milliseconds":0.0604,"allocatedBytes":0}
+{"synthetic":true,"recipients":0,"connected":32,"optimized":true,"window":2,"frames":20000,"delivered":0,"milliseconds":0.0581,"allocatedBytes":0}
+{"synthetic":true,"recipients":1,"connected":32,"optimized":false,"window":0,"frames":20000,"delivered":20000,"milliseconds":4.7499,"allocatedBytes":11200000}
+{"synthetic":true,"recipients":1,"connected":32,"optimized":false,"window":1,"frames":20000,"delivered":20000,"milliseconds":5.9004,"allocatedBytes":11200000}
+{"synthetic":true,"recipients":1,"connected":32,"optimized":false,"window":2,"frames":20000,"delivered":20000,"milliseconds":4.8328,"allocatedBytes":11200000}
+{"synthetic":true,"recipients":1,"connected":32,"optimized":true,"window":0,"frames":20000,"delivered":20000,"milliseconds":1.0469,"allocatedBytes":0}
+{"synthetic":true,"recipients":1,"connected":32,"optimized":true,"window":1,"frames":20000,"delivered":20000,"milliseconds":1.0745,"allocatedBytes":0}
+{"synthetic":true,"recipients":1,"connected":32,"optimized":true,"window":2,"frames":20000,"delivered":20000,"milliseconds":1.0871,"allocatedBytes":0}
+{"synthetic":true,"recipients":8,"connected":32,"optimized":false,"window":0,"frames":20000,"delivered":160000,"milliseconds":20.245,"allocatedBytes":89600000}
+{"synthetic":true,"recipients":8,"connected":32,"optimized":false,"window":1,"frames":20000,"delivered":160000,"milliseconds":21.2171,"allocatedBytes":89600000}
+{"synthetic":true,"recipients":8,"connected":32,"optimized":false,"window":2,"frames":20000,"delivered":160000,"milliseconds":21.7355,"allocatedBytes":89600000}
+{"synthetic":true,"recipients":8,"connected":32,"optimized":true,"window":0,"frames":20000,"delivered":160000,"milliseconds":2.579,"allocatedBytes":0}
+{"synthetic":true,"recipients":8,"connected":32,"optimized":true,"window":1,"frames":20000,"delivered":160000,"milliseconds":2.5292,"allocatedBytes":0}
+{"synthetic":true,"recipients":8,"connected":32,"optimized":true,"window":2,"frames":20000,"delivered":160000,"milliseconds":2.5506,"allocatedBytes":0}
+{"synthetic":true,"recipients":32,"connected":32,"optimized":false,"window":0,"frames":20000,"delivered":640000,"milliseconds":79.1481,"allocatedBytes":358400000}
+{"synthetic":true,"recipients":32,"connected":32,"optimized":false,"window":1,"frames":20000,"delivered":640000,"milliseconds":78.5726,"allocatedBytes":358400000}
+{"synthetic":true,"recipients":32,"connected":32,"optimized":false,"window":2,"frames":20000,"delivered":640000,"milliseconds":73.9414,"allocatedBytes":358400000}
+{"synthetic":true,"recipients":32,"connected":32,"optimized":true,"window":0,"frames":20000,"delivered":640000,"milliseconds":7.796,"allocatedBytes":0}
+{"synthetic":true,"recipients":32,"connected":32,"optimized":true,"window":1,"frames":20000,"delivered":640000,"milliseconds":7.8459,"allocatedBytes":0}
+{"synthetic":true,"recipients":32,"connected":32,"optimized":true,"window":2,"frames":20000,"delivered":640000,"milliseconds":7.7109,"allocatedBytes":0}

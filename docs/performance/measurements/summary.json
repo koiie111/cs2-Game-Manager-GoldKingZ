@@ -1,0 +1,113 @@
+{
+  "fixture": {
+    "server": 34,
+    "humans_before_after": 0,
+    "bots_before_after": 0,
+    "BlockNameChanger": 1,
+    "normally_BlockNameChanger": 0,
+    "UseOnConVarChangedHook": false,
+    "AutoUpdateSignatures": false
+  },
+  "method": "Identical OnTick Stopwatch + allocation probes; nearest rank percentiles; no full-tick telemetry",
+  "windows": [
+    {
+      "window": "baseline-0",
+      "calls": 2195,
+      "mean_us": 0.5237535307517084,
+      "p50_us": 0.505,
+      "p95_us": 0.912,
+      "p99_us": 1.17,
+      "max_us": 7.421,
+      "bytes_per_call": 0.0,
+      "sha256": "ffac92369f84c04ac209ea606c512b02ad5af7bdce54b0522beb1868aac942aa"
+    },
+    {
+      "window": "baseline-1",
+      "calls": 2194,
+      "mean_us": 0.5066308113035551,
+      "p50_us": 0.497,
+      "p95_us": 0.902,
+      "p99_us": 1.073,
+      "max_us": 1.507,
+      "bytes_per_call": 0.0,
+      "sha256": "e13e174900dcbc5c619e3978eedf8c024173ab44db748416ae417923bdbaeb82"
+    },
+    {
+      "window": "baseline-2",
+      "calls": 2195,
+      "mean_us": 0.4573403189066059,
+      "p50_us": 0.448,
+      "p95_us": 0.912,
+      "p99_us": 1.085,
+      "max_us": 7.364,
+      "bytes_per_call": 0.0,
+      "sha256": "79653818dbf25575b5fa49a9851dac5d9dd1663a1486cbe1df1077830d563911"
+    },
+    {
+      "window": "candidate-0",
+      "calls": 2194,
+      "mean_us": 0.338792160437557,
+      "p50_us": 0.294,
+      "p95_us": 0.619,
+      "p99_us": 0.748,
+      "max_us": 0.996,
+      "bytes_per_call": 0.0,
+      "sha256": "3ce7432f16b8868dff69df6a7c70bbf0a3dd0645531bb6ee73182f37b41cf963"
+    },
+    {
+      "window": "candidate-1",
+      "calls": 2195,
+      "mean_us": 0.3294009111617312,
+      "p50_us": 0.291,
+      "p95_us": 0.598,
+      "p99_us": 0.755,
+      "max_us": 11.974,
+      "bytes_per_call": 0.0,
+      "sha256": "991822c03748d21ae9da7301672fedca0ae2a0453aff3044b5f18f6c88dfeb03"
+    },
+    {
+      "window": "candidate-2",
+      "calls": 2194,
+      "mean_us": 0.3582620783956244,
+      "p50_us": 0.3,
+      "p95_us": 0.638,
+      "p99_us": 0.759,
+      "max_us": 9.128,
+      "bytes_per_call": 0.0,
+      "sha256": "6e4636fd158ab84a84093a38acb375633a4b82aa47768ce450d0ddb510463c2a"
+    },
+    {
+      "window": "repeat-baseline-0",
+      "calls": 2196,
+      "mean_us": 0.7604230418943534,
+      "p50_us": 0.738,
+      "p95_us": 1.32,
+      "p99_us": 1.624,
+      "max_us": 2.018,
+      "bytes_per_call": 0.0,
+      "sha256": "36b15133fd8e28930c210f9b11128e297eff805013a486183b010efc511a2cf5"
+    },
+    {
+      "window": "repeat-baseline-1",
+      "calls": 2197,
+      "mean_us": 0.7946649977241693,
+      "p50_us": 0.762,
+      "p95_us": 1.273,
+      "p99_us": 1.424,
+      "max_us": 11.254,
+      "bytes_per_call": 0.0,
+      "sha256": "5de73f645fe4c1e965a5f35a44a25d1b3c2942fd176bb55b48eb155fd779fd86"
+    },
+    {
+      "window": "repeat-baseline-2",
+      "calls": 2194,
+      "mean_us": 0.7821923427529627,
+      "p50_us": 0.755,
+      "p95_us": 1.246,
+      "p99_us": 1.391,
+      "max_us": 7.314,
+      "bytes_per_call": 0.0,
+      "sha256": "30d6d80bdcbb5ec0a3f088daf1cfb242a184c788f4f83b9f6a1c62fa056884bf"
+    }
+  ]
+}

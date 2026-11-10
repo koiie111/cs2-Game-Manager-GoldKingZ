@@ -1,0 +1,15 @@
+{
+  "server": 34,
+  "pid": 3888736,
+  "original_files_match": true,
+  "mismatched_files": [],
+  "probe_file_absent": true,
+  "temporary_prefs_absent": true,
+  "module": [
+    "  [#21:LOADED]: \"Game Manager (Block/Hide Unnecessaries In Game)\" (2.1.3) by Gold KingZ"
+  ],
+  "online": [
+    "players  : 0 humans, 0 bots (0 max) (not hibernating) (unreserved)"
+  ],
+  "probe_command_lookup": "no results\n"
+}

@@ -1,0 +1,9 @@
+PASS 173 assertions. Pure managed behavior only; CSS integration pending.
+{"synthetic":true,"recipients":0,"optimized":false,"frames":20000,"milliseconds":0.0108,"allocatedBytes":0}
+{"synthetic":true,"recipients":0,"optimized":true,"frames":20000,"milliseconds":0.0055,"allocatedBytes":0}
+{"synthetic":true,"recipients":1,"optimized":false,"frames":20000,"milliseconds":1.032,"allocatedBytes":4192768}
+{"synthetic":true,"recipients":1,"optimized":true,"frames":20000,"milliseconds":0.0734,"allocatedBytes":20288}
+{"synthetic":true,"recipients":8,"optimized":false,"frames":20000,"milliseconds":8.0889,"allocatedBytes":33542144}
+{"synthetic":true,"recipients":8,"optimized":true,"frames":20000,"milliseconds":0.4155,"allocatedBytes":162304}
+{"synthetic":true,"recipients":32,"optimized":false,"frames":20000,"milliseconds":32.4537,"allocatedBytes":134168576}
+{"synthetic":true,"recipients":32,"optimized":true,"frames":20000,"milliseconds":1.6099,"allocatedBytes":649216}

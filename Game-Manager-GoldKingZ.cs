@@ -55,18 +55,19 @@ public sealed class ClientPrefs
 }
 
 
-public class MainPlugin : BasePlugin
+public partial class MainPlugin : BasePlugin
 {
     public override string ModuleName => "Game Manager (Block/Hide Unnecessaries In Game)";
-    public override string ModuleVersion => "2.1.6";
+    public override string ModuleVersion => "2.1.6-perf.2";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
     public static MainPlugin Instance { get; set; } = new();
     public readonly Game_Listeners Game_Listeners = new();
     public readonly Game_UserMessages Game_UserMessages = new();
     public Globals g_Main = new();
+    internal readonly CallbackLifetime Lifetime = new();
+    internal CancellationTokenSource DownloadCancellation = new();
     public IPrefsStore<ClientPrefs>? _prefs;
-
     public override void Load(bool hotReload)
     {
         Instance = this;
@@ -84,16 +85,7 @@ public class MainPlugin : BasePlugin
 
         if (hotReload)
         {
-            Helper.RemoveRegisterCommandsAndHooks();
-            Helper.RemoveOnEntityTakeDamagePre();
-            Helper.ClearVariables();
-
-            Helper.DownloadMissingFiles();
-            Helper.LoadJson();
-            Helper.RegisterCommandsAndHooks();
             Helper.RegisterHookOnEntityTakeDamagePre();
-            Helper.ExectueCommands();
-            Helper.StartTimer();
             Helper.ReloadPlayersGlobals();
         }
     }
@@ -153,7 +145,7 @@ public class MainPlugin : BasePlugin
     {
         if (entity == null || !entity.IsValid || entity.DesignerName != "player_spray_decal") return;
 
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueueFrame(() =>
         {
             if (entity == null || !entity.IsValid) return;
 
@@ -202,32 +194,6 @@ public class MainPlugin : BasePlugin
         return HookResult.Continue;
     }
 
-    public void OnTick()
-    {
-        foreach(var getplayer in g_Main.Player_Data.Values)
-        {
-            if (getplayer == null) continue;
-
-            var player = getplayer.Player;
-            if (!player.IsValid() || !getplayer.PlayerName_Block) continue;
-
-            var timeSinceLastChange = (DateTime.Now - getplayer.LastNameChangeTime).TotalSeconds;
-            var totalBlock = Configs.Instance.BlockNameChanger_Block;
-            var timeLeft = totalBlock - timeSinceLastChange;
-
-            if (timeLeft < 0)
-            {
-                timeLeft = 0;
-            }
-
-            StringBuilder builder = new StringBuilder();
-            var getLocalizer = Configs.Instance.BlockNameChanger == 1 ? "PrintToCenterToPlayer.NameChanging.Mode1.Blocked" : "PrintToCenterToPlayer.NameChanging.Mode2.Blocked";
-            builder.AppendFormat(Localizer[getLocalizer, (int)Math.Ceiling(timeLeft)]);
-            var centerhtml = builder.ToString();
-            player.PrintToCenterHtml(centerhtml);
-        }
-    }
-    
     public HookResult OnEventPlayerPing(EventPlayerPing @event, GameEventInfo info)
     {
         if (@event == null) return HookResult.Continue;
@@ -345,7 +311,7 @@ public class MainPlugin : BasePlugin
 
         if (getplayer.IsBot && (Configs.Instance.Custom_ThrowNadeMessages == 1 || Configs.Instance.Custom_ThrowNadeMessages == 3 || Configs.Instance.Custom_ThrowNadeMessages == 4)) return HookResult.Continue;
 
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(getplayer, () =>
         {
             var player = getplayer;
             if (!player.IsValid(true)) return;
@@ -447,7 +413,7 @@ public class MainPlugin : BasePlugin
             var player = @event.Userid;
             if (!player.IsValid(true)) return HookResult.Continue;
 
-            Server.NextFrame(() =>
+            MainPlugin.Instance.QueuePlayerFrame(player, () =>
             {
                 if (!player.IsValid(true)) return;
 
@@ -513,7 +479,7 @@ public class MainPlugin : BasePlugin
 
         if (settings.UnlimitedClip)
         {
-            Server.NextFrame(() =>
+            MainPlugin.Instance.QueuePlayerFrame(player, () =>
             {
                 if (!player.IsValid(true) || !weapon.IsValid) return;
 
@@ -530,7 +496,7 @@ public class MainPlugin : BasePlugin
             return HookResult.Continue;
         }
 
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(player, () =>
         {
             if (!player.IsValid(true) || !weapon.IsValid) return;
 
@@ -563,7 +529,7 @@ public class MainPlugin : BasePlugin
         int slot = player.Slot;
         g_Main.ActiveReloadId.Remove(slot);
 
-        Server.NextFrame(() =>
+        MainPlugin.Instance.QueuePlayerFrame(player, () =>
         {
             if (!player.IsValid(true)) return;
 
@@ -670,15 +636,19 @@ public class MainPlugin : BasePlugin
                     attacker_handlee.Victim = victim;
                 }
 
-                MainPlugin.Instance.AddTimer(0.01f, () =>
+                g_Main.Player_Data.TryGetValue(victim.Slot, out var victimContext);
+                g_Main.Player_Data.TryGetValue(attacker.Slot, out var attackerContext);
+                var victimSlot = victim.Slot;
+                var attackerSlot = attacker.Slot;
+                MainPlugin.Instance.AddLifetimeTimer(0.01f, () =>
                 {
-                    if (victim.IsValid(true) && g_Main.Player_Data.TryGetValue(victim.Slot, out var victim_handle2))
+                    if (g_Main.Player_Data.TryGetValue(victimSlot, out var victim_handle2) && ReferenceEquals(victim_handle2, victimContext))
                     {
                         victim_handle2.Attacker = null!;
                         victim_handle2.Victim = null!;
                     }
 
-                    if (attacker.IsValid(true) && g_Main.Player_Data.TryGetValue(attacker.Slot, out var attacker_handle2))
+                    if (g_Main.Player_Data.TryGetValue(attackerSlot, out var attacker_handle2) && ReferenceEquals(attacker_handle2, attackerContext))
                     {
                         attacker_handle2.Attacker = null!;
                         attacker_handle2.Victim = null!;
@@ -701,7 +671,7 @@ public class MainPlugin : BasePlugin
                     {
                         attacker_handle.StabedHisTeamMate = true;
 
-                        MainPlugin.Instance.AddTimer(1.00f, () =>
+                        MainPlugin.Instance.AddPlayerTimer(1.00f, attacker, () =>
                         {
                             if (attacker.IsValid(true) && g_Main.Player_Data.TryGetValue(attacker.Slot, out var attacker_handle2))
                             {
@@ -730,7 +700,7 @@ public class MainPlugin : BasePlugin
             
             if (Configs.Instance.Disable_AimPunch.DisableAimPunch == 1 || (Configs.Instance.Disable_AimPunch.DisableAimPunch > 1 && MainPlugin.Instance._prefs != null && MainPlugin.Instance._prefs.TryGetValue(victim.Slot, out var handle) && handle.Toggle_AimPunch == 1))
             {
-                Server.NextFrame(() =>
+                MainPlugin.Instance.QueuePlayerFrame(victim, () =>
                 {
                     if (!victim.IsValid(true)) return;
 
@@ -779,7 +749,7 @@ public class MainPlugin : BasePlugin
 
         if (Configs.Instance.HideChatHUD > 0 || Configs.Instance.HideDeadBody > 0 || Configs.Instance.HideWeaponsHUD)
         {
-            Server.NextFrame(() =>
+            MainPlugin.Instance.QueuePlayerFrame(victim, () =>
             {
                 if (!victim.IsValid(true)) return;
 
@@ -911,14 +881,7 @@ public class MainPlugin : BasePlugin
         var player = @event.Userid;
         if (!player.IsValid()) return HookResult.Continue;
             
-        if (g_Main.Player_Data.TryGetValue(player.Slot, out var handle))
-        {
-            handle.PlayerName_Count = 0;
-            handle.PlayerName_Block = false;
-            handle.PlayerName_Block_Message = false;
-
-            g_Main.Player_Data.Remove(player.Slot);
-        }
+        OnClientDisconnect(player.Slot);
 
         return HookResult.Continue;
     }

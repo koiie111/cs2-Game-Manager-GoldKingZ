@@ -1,0 +1,31 @@
+{
+  "module_version": "2.1.6-perf.2",
+  "source_commit": "bfcd074d5cc8cb0e5ece3ef1c3faa48ad3fd368f",
+  "sdk": "10.0.400",
+  "target_framework": "net10.0",
+  "css_api": "1.0.378",
+  "clientprefs_required": "1.0.3",
+  "clientprefs_shared_reference_sha256": "1647c392e5e4f9cba41a39ad0e08c58f9f6fcc4c53aeef5d5f237ef4374d62d4",
+  "baseline": {
+    "source": "f7ff9e909649cd6fe597457b994201d30a0a766b",
+    "adjustment": "Only wildcard API package pinned to 1.0.378 in isolated build; no production source changes",
+    "dll_sha256": "fb127d54c9e620d77564a7c4fe28287410574bc6c6393ced8d21342327590451",
+    "build_warnings": 0
+  },
+  "candidate_build_warnings": 0,
+  "server_status": "awaiting_live; not deployed by this review",
+  "files": {
+    "Game-Manager-GoldKingZ.deps.json": "99e1787510a957428e6d9227d2054609c3b1292f40758728b21cfc14ee00cc4a",
+    "Game-Manager-GoldKingZ.dll": "6922d4375834d5be52cc93653826638a92a408e41aed1bafbe637f9cfc66f45a",
+    "Newtonsoft.Json.dll": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07",
+    "lang/en.json": "81168327e1864ae1c33add3bd34d8307126a2fc616c5b49834c44dc6f31a9ae0"
+  },
+  "package_sha256": "94cfcdfa2b471fdba582cb4abbe915381898e8945cb8d6697828e77d36181572",
+  "evidence": {
+    "docs/performance/measurements/review-runtime.txt": "056207b5e6d9014396c6494547e6c34a3ef25f342d786306dddeb800d8e3c633",
+    "tests/BenchmarkBaseline.cs": "004795881e7b83955f2ff2531937d88aee4a2d78ca89c7eeb2c47ec7d421a377",
+    "tests/RuntimeChecks.cs": "ca8274c1d1087ea5ee250afcdcf41f046663942362a807c083d55360913de9a2",
+    "tests/RuntimeStubs.cs": "f03adcde261448f7b20c5e0f4d0729710f710a1f0b18d5d30d063d63192e70eb"
+  },
+  "evidence_hash_encoding": "UTF-8; CRLF normalized to LF for text only"
+}

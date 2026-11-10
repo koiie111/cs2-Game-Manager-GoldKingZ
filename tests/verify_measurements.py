@@ -35,4 +35,8 @@ for recipients in (0, 1, 8, 32):
             assert w["synthetic"] and w["connected"] == 32 and w["frames"] == 20000
             assert w["delivered"] == w["frames"] * recipients
             assert w["milliseconds"] >= 0 and w["allocatedBytes"] >= 0
+manifest = json.loads((directory / "review-release-manifest.json").read_text(encoding="utf-8"))
+for name, expected_hash in manifest["evidence"].items():
+    raw = (root / name).read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(raw).hexdigest() == expected_hash, name
 print("Verified 9 idle raw profiles and 24 synthetic runtime windows; no live speedup inferred.")

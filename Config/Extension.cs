@@ -167,6 +167,7 @@ public static class Extension
         var PlayerPawnValue = PlayerPawn.Value;
         if (PlayerPawnValue == null || !PlayerPawnValue.IsValid) return;
 
+        Helper.TrackRender(PlayerPawnValue, Color.FromArgb(alpha, red, green, blue));
         PlayerPawnValue.Render = Color.FromArgb(alpha, red, green, blue);
         Utilities.SetStateChanged(PlayerPawnValue, "CBaseModelEntity", "m_clrRender");
     }
@@ -215,6 +216,7 @@ public static class Extension
 
         if (Hide)
         {
+            Helper.TrackHud(PlayerPawnValue, HideHUD);
             PlayerPawnValue.HideHUD |= HideHUD;
         }
         else

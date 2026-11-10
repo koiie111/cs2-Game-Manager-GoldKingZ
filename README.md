@@ -13,6 +13,11 @@
 
 # [CS2] Game-Manager-GoldKingZ (2.1.6)
 
+Fork build: **2.1.6-stable.1-rc**, accepted by the project owner on 2026-11-10;
+the requested verification stage is complete. See [test results, known limitations and diagnostics](docs/STABILITY.md)
+and [upgrade/rollback requirements](UPGRADE.md). Server/root diagnostics:
+`css_gm_status`, `css_gm_reload`. ClientPrefs 1.0.3 and .NET 10 are required.
+
 Block/Hide Unnecessaries In Game
 
 ![decay](https://github.com/oqyh/cs2-Game-Manager/assets/48490385/6960136b-4aef-467e-b1ad-e4ec8c6baf8a)

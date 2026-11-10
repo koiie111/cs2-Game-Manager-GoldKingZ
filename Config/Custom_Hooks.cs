@@ -14,6 +14,7 @@ public static class CustomHooks
 {
     private static MemoryFunctionWithReturn<IntPtr, int, IntPtr, IntPtr, IntPtr, byte>? OnConVarChanged;
     private static bool _isHooked = false;
+    internal static bool IsHooked => _isHooked;
 
     public static void Init(CustomGameData gameData)
     {
@@ -27,15 +28,16 @@ public static class CustomHooks
             if (OnConVarChanged != null)
             {
                 OnConVarChanged.Hook(OnConVarChanged_Hook, HookMode.Pre);
+                _isHooked = true;
                 Helper.ExectueCommands(true);
             }
 
-            _isHooked = true;
+
             Helper.DebugMessage("All Hooks Started");
         }
         catch (Exception ex)
         {
-            Helper.DebugMessage($"Hook Init Error: {ex.Message}");
+            Helper.DebugMessage($"Hook Init Error: {ex.Message}", 0);
         }
     }
 

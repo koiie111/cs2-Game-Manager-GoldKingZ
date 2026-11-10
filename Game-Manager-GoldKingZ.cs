@@ -58,7 +58,7 @@ public sealed class ClientPrefs
 public partial class MainPlugin : BasePlugin
 {
     public override string ModuleName => "Game Manager (Block/Hide Unnecessaries In Game)";
-    public override string ModuleVersion => "2.1.6-perf.2";
+    public override string ModuleVersion => "2.1.6-stable.1-rc";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
     public static MainPlugin Instance { get; set; } = new();
@@ -73,6 +73,8 @@ public partial class MainPlugin : BasePlugin
         Instance = this;
         Configs.Load(ModuleDirectory);
         
+        AddCommand("css_gm_status", "GameManager diagnostics (console/root)", StatusCommand);
+        AddCommand("css_gm_reload", "Reload all GameManager configuration (console/root)", ReloadCommand);
         Helper.RemoveRegisterCommandsAndHooks();
         Helper.RemoveOnEntityTakeDamagePre();
         Helper.ClearVariables();
@@ -408,7 +410,7 @@ public partial class MainPlugin : BasePlugin
         Helper.ExectueCommands();
         Helper.StartTimer();
 
-        if (Configs.Instance.HideChatHUD > 0 || Configs.Instance.HideDeadBody > 0 || Configs.Instance.HideWeaponsHUD || Configs.Instance.DisableNewReloadClips > 0)
+        if (Configs.Instance.HideLegs || Configs.Instance.HideChatHUD > 0 || Configs.Instance.HideDeadBody > 0 || Configs.Instance.HideWeaponsHUD || Configs.Instance.DisableNewReloadClips > 0)
         {
             var player = @event.Userid;
             if (!player.IsValid(true)) return HookResult.Continue;
@@ -747,7 +749,7 @@ public partial class MainPlugin : BasePlugin
             }
         }
 
-        if (Configs.Instance.HideChatHUD > 0 || Configs.Instance.HideDeadBody > 0 || Configs.Instance.HideWeaponsHUD)
+        if (Configs.Instance.HideLegs || Configs.Instance.HideChatHUD > 0 || Configs.Instance.HideDeadBody > 0 || Configs.Instance.HideWeaponsHUD)
         {
             MainPlugin.Instance.QueuePlayerFrame(victim, () =>
             {
@@ -891,6 +893,8 @@ public partial class MainPlugin : BasePlugin
         try
         {
             Helper.RemoveOnEntityTakeDamagePre();
+            CustomGameData.Unload();
+            Helper.RestoreOwnedState();
             Helper.ClearVariables();
         }
         catch (Exception ex)
@@ -906,28 +910,16 @@ public partial class MainPlugin : BasePlugin
             _prefs?.Unload();
             Helper.RemoveRegisterCommandsAndHooks();
             Helper.RemoveOnEntityTakeDamagePre();
+            CustomGameData.Unload();
+            Helper.RestoreOwnedState();
             Helper.ClearVariables();
-            Helper.RenderBackPlayers();
+
         }
         catch (Exception ex)
         {
             Helper.DebugMessage($"Unload Error: {ex.Message}", 0);
         }
 
-        if (hotReload)
-        {
-            try
-            {
-                Helper.RemoveRegisterCommandsAndHooks();
-                Helper.RemoveOnEntityTakeDamagePre();
-                Helper.ClearVariables();
-                Helper.RenderBackPlayers();
-            }
-            catch (Exception ex)
-            {
-                Helper.DebugMessage($"Unload hotReload Error: {ex.Message}", 0);
-            }
-        }
     }
 
     /* [ConsoleCommand("css_test", "testttt")]

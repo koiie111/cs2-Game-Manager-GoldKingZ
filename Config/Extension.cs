@@ -195,7 +195,7 @@ public static class Extension
         var entityIndex = entity.Index;
         var pawn = entity.As<CCSPlayerPawn>();
         var candidate = pawn.Controller.Value?.As<CCSPlayerController>();
-        if (candidate.IsValid(true) && (realPlayer ? candidate.Pawn.Value?.Index : candidate.PlayerPawn.Value?.Index) == entityIndex)
+        if (candidate.IsValid(true) && !candidate.IsBot && !candidate.ControllingBot && (realPlayer ? candidate.Pawn.Value?.Index : candidate.PlayerPawn.Value?.Index) == entityIndex)
             return candidate;
         // Bot takeover can associate a different controller; preserve the original lookup.
 
